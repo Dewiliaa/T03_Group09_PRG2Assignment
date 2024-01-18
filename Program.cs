@@ -111,20 +111,19 @@ Console.WriteLine("----------");
 
 
 // Method for option 2 - List all current orders, both gold members and regular queue
-// Method for option 2 - List all current orders, both gold members and regular queue
 void ListAllCurrentOrders()
 {
     Console.WriteLine("List of all current orders:");
 
-    // Display the header with adjusted spacing
+    // Header
     Console.WriteLine("{0,-5} {1,-10} {2,-20} {3,-20} {4,-10} {5,-10} {6,-10} {7,-18} {8,-12} {9,-12} {10,-12} {11,-12} {12,-12} {13,-12} {14,-12}",
         "Id", "MemberId", "TimeReceived", "TimeFulfilled", "Option", "Scoops", "Dipped", "WaffleFlavour", "Flavour1", "Flavour2", "Flavour3", "Topping1", "Topping2", "Topping3", "Topping4");
 
-    // Read and display orders from orders.csv
+    // Read & Display
     ReadOrders("orders.csv");
 }
 
-// Method to read orders from order.csv and display in the desired format
+// Read & display data
 void ReadOrders(string filePath)
 {
     try
