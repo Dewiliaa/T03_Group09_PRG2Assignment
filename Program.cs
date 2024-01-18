@@ -2,20 +2,43 @@
 using System;
 using System.Collections.Generic;
 
-// List to store objects
 List<Customer> customers = new List<Customer>();
-Queue<Order> goldMembersQueue = new Queue<Order>();
-Queue<Order> regularQueue = new Queue<Order>();
 
-// Read csvs
-static void Main()
+void ReadCustomers(string filePath)
 {
-    ReadCustomers("customer.csv");
-    ReadOrders("orders.csv");
-    ReadOptions("options.csv");
-    ReadFlavours("flavours.csv");
-    ReadToppings("toppings.csv");
+    try
+    {
+        using (StreamReader sr = new StreamReader(filePath))
+        {
+            string? s = sr.ReadLine(); // heading
+            while ((s = sr.ReadLine()) != null) // for the rest of the lines
+            {
+                string[] data = s.Split(',');
+
+                // data[0] -> Name, data[1] -> MemberId, 
+                // data[2] -> DOB, data[3] -> MembershipStatus,
+                // data[4] -> MembershipPoints, data[5] -> PunchCard
+
+                string name = data[0];
+                int memberId = int.Parse(data[1]);
+                DateTime dob = DateTime.Parse(data[2]);
+                string membershipStatus = data[3];
+                int membershipPoints = int.Parse(data[4]);
+                int punchCard = int.Parse(data[5]);
+
+                Customer customer = new Customer(name, memberId, dob);
+                customer.Rewards = new PointCard(membershipPoints, punchCard);
+                customers.Add(customer);
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error reading customers from file: {ex.Message}");
+    }
 }
+
+ReadCustomers("customers.csv");
 
 // Display menu
 void DisplayMenu()
@@ -34,7 +57,7 @@ void DisplayMenu()
 string choice;
 
 // Main method
-while  (true)
+while (true)
 {
     // Call the display menu method
     DisplayMenu();
@@ -42,6 +65,7 @@ while  (true)
     choice = Console.ReadLine();
     if (choice == "0")
         break;
+
     else if (choice == "1")
     {
         // call method
@@ -85,33 +109,51 @@ Console.WriteLine("----------");
 
 
 
+
+// Method for option 2 - List all current orders, both gold members and regular queue
 // Method for option 2 - List all current orders, both gold members and regular queue
 void ListAllCurrentOrders()
 {
-    Console.WriteLine("List of all current orders: ");
+    Console.WriteLine("List of all current orders:");
 
-    // Display gold members' order
-    Console.WriteLine("Gold Members Queue");
-    foreach (var customer in customers)
+    // Display the header with adjusted spacing
+    Console.WriteLine("{0,-5} {1,-10} {2,-20} {3,-20} {4,-10} {5,-10} {6,-10} {7,-18} {8,-12} {9,-12} {10,-12} {11,-12} {12,-12} {13,-12} {14,-12}",
+        "Id", "MemberId", "TimeReceived", "TimeFulfilled", "Option", "Scoops", "Dipped", "WaffleFlavour", "Flavour1", "Flavour2", "Flavour3", "Topping1", "Topping2", "Topping3", "Topping4");
+
+    // Read and display orders from orders.csv
+    ReadOrders("orders.csv");
+}
+
+// Method to read orders from order.csv and display in the desired format
+void ReadOrders(string filePath)
+{
+    try
     {
-        if (customer.Rewards.Tier == "Gold" && customer.CurrentOrder != null)
+        using (StreamReader sr = new StreamReader(filePath))
         {
-            Console.WriteLine($"Customer: {customer.Name}");
-            Console.WriteLine(customer.CurrentOrder.ToString());
+            // Skip the heading
+            sr.ReadLine();
+
+            while (true)
+            {
+                string line = sr.ReadLine();
+                if (line == null) break;
+
+                // Split the order details
+                string[] data = line.Split(',');
+
+                // Format and display the order details with adjusted spacing
+                Console.WriteLine("{0,-5} {1,-10} {2,-20} {3,-20} {4,-10} {5,-10} {6,-10} {7,-18} {8,-12} {9,-12} {10,-12} {11,-12} {12,-12} {13,-12} {14,-12}",
+                    data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14]);
+            }
         }
     }
-
-    // Display regular orders
-    Console.WriteLine("Regular queue: ");
-    foreach (var customer in customers)
+    catch (Exception ex)
     {
-        if (customer.Rewards.Tier != "Ordinary" && customer.CurrentOrder != null)
-        {
-            Console.WriteLine($"Customer: {customer.Name}");
-            Console.WriteLine(customer.CurrentOrder.ToString());
-        }
+        Console.WriteLine($"Error reading orders from file: {ex.Message}");
     }
 }
+
 
 
 // Method for option 3 - Register a new customer
@@ -123,7 +165,10 @@ void ListAllCurrentOrders()
 
 
 // Method for option 5 - Display order details of a customer
-
+void DisplayOrderDetailsOfCustomer()
+{
+    Console.WriteLine("List of all customers");
+}
 
 
 // Method for option 6 - Modify order details

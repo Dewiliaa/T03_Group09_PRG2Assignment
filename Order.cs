@@ -10,10 +10,10 @@ namespace T03_Group09_PRG2Assignment
     {
         private static int nextOrderId = 1;  // Static variable to generate unique IDs
 
-        public int Id { get; private set; }
-        public DateTime TimeReceived { get; private set; }
+        public int Id { get; set; }
+        public DateTime TimeReceived { get; set; }
         public DateTime? TimeFulfilled { get; set; }  
-        public List<IceCream> IceCreamList { get; private set; }
+        public List<IceCream> IceCreamList { get;  set; }
 
         // Default constructor
         public Order()

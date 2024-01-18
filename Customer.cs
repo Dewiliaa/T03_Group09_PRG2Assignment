@@ -8,12 +8,12 @@ namespace T03_Group09_PRG2Assignment
 {
     class Customer
     {
-        public string Name { get; private set; }
-        public int MemberId { get; private set; }
-        public DateTime DOB { get; private set; }
-        public Order CurrentOrder { get; private set; }
-        public List<Order> OrderHistory { get; private set; } = new List<Order>();
-        public PointCard Rewards { get; private set; }
+        public string Name { get; set; }
+        public int MemberId { get;  set; }
+        public DateTime DOB { get; set; }
+        public Order CurrentOrder { get; set; }
+        public List<Order> OrderHistory { get; set; } = new List<Order>();
+        public PointCard Rewards { get; set; }
 
         public Customer()
         {
