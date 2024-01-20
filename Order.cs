@@ -8,20 +8,13 @@ namespace T03_Group09_PRG2Assignment
 {
     class Order
     {
-        private static int nextOrderId = 1;  // Static variable to generate unique IDs
-
         public int Id { get; set; }
         public DateTime TimeReceived { get; set; }
         public DateTime? TimeFulfilled { get; set; }  
         public List<IceCream> IceCreamList { get;  set; }
 
         // Default constructor
-        public Order()
-        {
-            Id = nextOrderId++;
-            TimeReceived = DateTime.Now;
-            IceCreamList = new List<IceCream>();
-        }
+        public Order() { }
 
         // Parameterized constructor 
         public Order(int id, DateTime timeReceived)
