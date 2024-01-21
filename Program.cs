@@ -131,7 +131,7 @@ void ReadOrdersCSV(string filePath)
 
         else if (choice == "1")
         {
-            // call method
+            DisplayCustomerInformation();
         }
 
         else if (choice == "2")
@@ -173,6 +173,35 @@ void ReadOrdersCSV(string filePath)
 
 // Method for option 1 - List all customers
 
+void DisplayCustomerInformation(string filePath = "customers.csv")
+{
+    // Check if the file exists
+    if (File.Exists(filePath))
+    {
+        // Read and display customer information
+        using (TextFieldParser parser = new TextFieldParser(filePath))
+        {
+            parser.TextFieldType = FieldType.Delimited;
+            parser.SetDelimiters(",");
+
+            // Skip the header line
+            parser.ReadLine();
+
+            while (!parser.EndOfData)
+            {
+                // Read the fields from the CSV
+                string[] fields = parser.ReadFields();
+
+                // Display customer information
+                Console.WriteLine($"Name: {fields[0]}, MemberID: {fields[1]}, DOB: {fields[2]}");
+            }
+        }
+    }
+    else
+    {
+        Console.WriteLine("The CSV file does not exist.");
+    }
+}
 
 
 
