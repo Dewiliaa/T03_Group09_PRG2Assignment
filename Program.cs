@@ -193,7 +193,7 @@ void DisplayCustomerInformation(string filePath = "customers.csv")
                 string[] fields = parser.ReadFields();
 
                 // Display customer information
-                Console.WriteLine($"Name: {fields[0]}, MemberID: {fields[1]}, DOB: {fields[2]}");
+                Console.WriteLine($"Name: {fields[0]}, MemberID: {fields[1]}, DOB: {fields[2]}, MembershipStatus: {fields[3]}, MembershipPoints: {fields[4]}, PunchCard: {fields[5]}");
             }
         }
     }
