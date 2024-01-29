@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualBasic.FileIO;
+using System.Globalization;
 
 // For orders.csv
 List<int> id = new List<int>();
@@ -28,6 +29,9 @@ List<DateOnly> DOB = new List<DateOnly>();
 List<string> MembershipStatus = new List<string>();
 List<int> MembershipPoints = new List<int>();
 List<int> PunchCard = new List<int>();
+
+Dictionary<int, Queue<Order>> GoldOrderQueues = new Dictionary<int, Queue<Order>>();
+Dictionary<int, Queue<Order>> RegularOrderQueues = new Dictionary<int, Queue<Order>>();
 
 void ReadCustomersCSV(string filePath)
 {
@@ -231,10 +235,313 @@ void DisplayCurrentOrders()
 
 
 // Method for option 3 - Register a new customer
+void RegisterNewCustomer()
+{
+    Console.Write("Enter name: ");
+    string name = Console.ReadLine();
+
+    Console.Write("Enter id number: ");
+    string input = Console.ReadLine();
+    int idNum;
+
+    if (!int.TryParse(input, out idNum))
+    {
+        Console.WriteLine("Invalid input. Please enter an integer.");
+        return; // Exit the method if input is invalid
+    }
+
+    Console.Write("Enter date of birth: ");
+    DateTime dob;
+
+    if (DateTime.TryParseExact(Console.ReadLine(), "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dob))
+    {
+        // Create customer and Pointcard objects
+        Customer customer = new Customer(name, idNum, dob);
+        PointCard pointcard = new PointCard();
+        customer.Rewards = pointcard;
+
+        pointcard.Points = 0;
+        pointcard.Tier = "Ordinary";
+        pointcard.PunchCard = 0;
+
+        // Format the dob to exclude the time part
+        string formattedDob = dob.ToString("MM/dd/yyyy");
+
+        using (StreamWriter writer = new StreamWriter("customers.csv", true))
+        {
+            // Use properties of the customer object
+            writer.WriteLine($"{name},{idNum},{formattedDob}");
+            Console.WriteLine("Customer registered successfully!");
+        }
+    }
+    else
+    {
+        Console.WriteLine("Invalid date format.");
+    }
+}
+
 
 
 
 // Method for option 4 - Create a customer's order
+
+void CreateCustomerOrder()
+{
+    List<Customer> customers = ReadCustomersFromCSV();
+
+    Console.WriteLine("List of Customers:");
+    foreach (var customer in customers)
+    {
+        Console.WriteLine($"{customer.Name}, Member ID: {customer.MemberId}");
+    }
+
+    Console.Write("Select a customer (enter Member ID): ");
+    int selectedMemberId;
+
+    while (!int.TryParse(Console.ReadLine(), out selectedMemberId) || customers.All(c => c.MemberId != selectedMemberId))
+    {
+        Console.WriteLine("Invalid Member ID. Please try again.");
+        Console.Write("Select a customer (enter Member ID): ");
+    }
+
+    Customer selectedCustomer = customers.Find(c => c.MemberId == selectedMemberId);
+
+    Console.WriteLine($"Selected Customer: {selectedCustomer.Name}");
+
+    Order customerOrder = new Order(); // Create a new Order object here
+
+    do
+    {
+        Console.Write("Enter ice cream option: ");
+        string option = Console.ReadLine();
+
+        Console.Write("Enter number of scoops: ");
+        int scoops;
+        while (!int.TryParse(Console.ReadLine(), out scoops) || scoops <= 0)
+        {
+            Console.WriteLine("Invalid input. Please enter a positive integer for scoops.");
+            Console.Write("Enter number of scoops: ");
+        }
+
+        Console.Write("Enter ice cream flavour 1: ");
+        string flavour1 = Console.ReadLine();
+
+        Console.Write("Enter ice cream flavour 2: ");
+        string flavour2 = Console.ReadLine();
+
+        Console.Write("Enter ice cream flavour 3: ");
+        string flavour3 = Console.ReadLine();
+
+        Console.Write("Enter if waffle is dipped or not (true or false): ");
+        bool isWaffleDipped;
+        while (!bool.TryParse(Console.ReadLine(), out isWaffleDipped))
+        {
+            Console.WriteLine("Invalid input. Please enter 'true' or 'false'.");
+            Console.Write("Enter if waffle is dipped or not (true or false): ");
+        }
+
+        Console.Write("Enter topping 1: ");
+        string topping1 = Console.ReadLine();
+
+        Console.Write("Enter topping 2: ");
+        string topping2 = Console.ReadLine();
+
+        Console.Write("Enter topping 3: ");
+        string topping3 = Console.ReadLine();
+
+        // Instantiate the appropriate ice cream class based on the user's input
+        IceCream iceCream = CreateIceCream(new string[] { option, scoops.ToString(), $"{flavour1}|False, {flavour2}|False, {flavour3}|False", $"{topping1}, {topping2}, {topping3}" });
+
+        // Add the ice cream to the order
+        customerOrder.AddIceCream(iceCream);
+
+        Console.Write("Add another ice cream? (Y/N): ");
+    } while (Console.ReadLine().ToUpper() == "Y");
+
+    selectedCustomer.CurrentOrder = customerOrder;
+
+    // Use the correct property name for rewards tier
+    if (selectedCustomer.Rewards.Tier == "Gold")
+    {
+        EnqueueOrder(GoldOrderQueues, customerOrder);
+    }
+    else
+    {
+        EnqueueOrder(RegularOrderQueues, customerOrder);
+    }
+
+    SaveOrderToCSV(customerOrder, selectedMemberId, "orders.csv");
+
+    Console.WriteLine("Order has been made successfully!");
+}
+
+// Method to save order information to CSV file
+static void SaveOrderToCSV(Order order, int memberId, string filePath)
+{
+    try
+    {
+        using (StreamWriter sw = new StreamWriter(filePath, true)) // true for append mode
+        {
+            // Write order information to CSV format
+            sw.WriteLine($"{order.Id},{memberId},{order.TimeReceived},{order.TimeFulfilled}");
+
+            // Optionally, write ice cream details to the CSV file
+            foreach (var iceCream in order.IceCreamList)
+            {
+                sw.WriteLine($"{order.Id},{iceCream.Option},{iceCream.Scoops},{string.Join(",", iceCream.Flavours)},{string.Join(",", iceCream.Toppings)}");
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while saving the order to CSV: {ex.Message}");
+    }
+}
+
+// Helper method to create IceCream object based on flavor
+static IceCream CreateIceCream(string[] iceCreamDetails)
+{
+    if (iceCreamDetails.Length < 4)
+    {
+        Console.WriteLine("Error: Insufficient data to create IceCream.");
+        return null; // or handle error appropriately
+    }
+
+    try
+    {
+        string option = iceCreamDetails[4].Trim();
+        int scoops = int.Parse(iceCreamDetails[5]);
+        List<Flavour> flavours = ParseFlavors(iceCreamDetails[8]);
+        List<Topping> toppings = ParseToppings(iceCreamDetails[11]);
+
+        // Determine the concrete class based on the option
+        switch (option.ToLower())
+        {
+            case "vanilla":
+                return new VanillaIceCream(option, scoops, flavours, toppings);
+            case "chocolate":
+                return new ChocolateIceCream(option, scoops, flavours, toppings);
+            case "strawberry":
+                return new StrawberryIceCream(option, scoops, flavours, toppings);
+            case "durian":
+                return new DurianIceCream(option, scoops, flavours, toppings);
+            case "ube":
+                return new UbeIceCream(option, scoops, flavours, toppings);
+            case "seasalt":
+                return new SeasaltIceCream(option, scoops, flavours, toppings);
+            default:
+                Console.WriteLine("Invalid ice cream option. Using default Vanilla Ice Cream.");
+                return new VanillaIceCream(option, scoops, flavours, toppings);
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Error creating IceCream: " + ex.Message);
+        return null; // or handle exception appropriately
+    }
+}
+
+static List<Flavour> ParseFlavors(string flavorsString)
+{
+    List<Flavour> flavors = new List<Flavour>();
+    string[] flavorArray = flavorsString.Split(',');
+
+    foreach (var flavor in flavorArray)
+    {
+        // Split each flavor into type and premium information
+        string[] flavorInfo = flavor.Trim().Split('|');
+
+        // Check if premium information is provided
+        bool isPremium = flavorInfo.Length > 1 && bool.TryParse(flavorInfo[6], out bool premium);
+
+        flavors.Add(new Flavour(flavorInfo[10], isPremium, 0));
+    }
+
+    return flavors;
+}
+
+static List<Topping> ParseToppings(string toppingsString)
+{
+    List<Topping> toppings = new List<Topping>();
+    string[] toppingArray = toppingsString.Split(',');
+
+    foreach (var topping in toppingArray)
+    {
+        toppings.Add(new Topping(topping.Trim()));
+    }
+
+    return toppings;
+}
+
+
+static void EnqueueOrder(Dictionary<int, Queue<Order>> orderQueues, Order order)
+{
+    int key = order.Id;
+    if (!orderQueues.ContainsKey(key))
+    {
+        orderQueues.Add(key, new Queue<Order>());
+    }
+    orderQueues[key].Enqueue(order);
+}
+
+
+static List<Customer> ReadCustomersFromCSV(string filePath = "customers.csv")
+{
+    List<Customer> customers = new List<Customer>();
+
+    try
+    {
+        if (File.Exists(filePath))
+        {
+            using (StreamReader sr = new StreamReader(filePath))
+            {
+                // Skip the header row
+                sr.ReadLine();
+
+                while (!sr.EndOfStream)
+                {
+                    string line = sr.ReadLine();
+                    string[] data = line.Split(',');
+
+                    string name = data[0].Trim();
+                    int idNum = int.Parse(data[1].Trim());
+
+                    // Ensure consistent date parsing
+                    if (DateTime.TryParseExact(data[2].Trim(), "dd/mm/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob))
+                    {
+                        string tier = data[3].Trim();
+                        int points = int.Parse(data[4].Trim());
+                        int punchcard = int.Parse(data[5].Trim());
+
+                        // Create the PointCard object and set points and punch card values
+                        PointCard pointCard = new PointCard(points, punchcard);
+
+                        // Create the Customer object and set the values
+                        Customer customer = new Customer(name, idNum, dob);
+                        customer.Rewards = pointCard; // Assign the created PointCard to the customer
+
+                        customers.Add(customer);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error parsing date for customer {name}. Skipping this entry.");
+                    }
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Error: File not found - {filePath}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while loading customers: {ex.Message}");
+    }
+
+    return customers;
+}
+
 
 
 // Method for option 5 - Display order details of a customer
