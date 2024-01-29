@@ -145,12 +145,12 @@ while (true)
 
     else if (choice == "3")
     {
-        // call method
+        RegisterNewCustomer();
     }
 
     else if (choice == "4")
     {
-        // call method
+        CreateCustomerOrder();
     }
 
     else if (choice == "5")
@@ -240,51 +240,106 @@ void RegisterNewCustomer()
     Console.Write("Enter name: ");
     string name = Console.ReadLine();
 
-    Console.Write("Enter id number: ");
-    string input = Console.ReadLine();
     int idNum;
-
-    if (!int.TryParse(input, out idNum))
+    if (!GetValidInput("Enter id number: ", out idNum))
     {
-        Console.WriteLine("Invalid input. Please enter an integer.");
-        return; // Exit the method if input is invalid
+        return;
     }
 
-    Console.Write("Enter date of birth: ");
+    // Check if the ID is already registered
+    if (IsCustomerRegistered(idNum))
+    {
+        Console.WriteLine("Person with the same ID is already registered.");
+        return;
+    }
+
     DateTime dob;
-
-    if (DateTime.TryParseExact(Console.ReadLine(), "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dob))
+    if (!GetValidDate("Enter date of birth (d/M/yyyy): ", out dob))
     {
-        // Create customer and Pointcard objects
-        Customer customer = new Customer(name, idNum, dob);
-        PointCard pointcard = new PointCard();
-        customer.Rewards = pointcard;
-
-        pointcard.Points = 0;
-        pointcard.Tier = "Ordinary";
-        pointcard.PunchCard = 0;
-
-        // Format the dob to exclude the time part
-        string formattedDob = dob.ToString("MM/dd/yyyy");
-
-        using (StreamWriter writer = new StreamWriter("customers.csv", true))
-        {
-            // Use properties of the customer object
-            writer.WriteLine($"{name},{idNum},{formattedDob}");
-            Console.WriteLine("Customer registered successfully!");
-        }
+        return;
     }
-    else
+
+    // Create customer and Pointcard objects
+    Customer customer = new Customer(name, idNum, dob);
+    PointCard pointcard = new PointCard();
+    customer.Rewards = pointcard;
+
+    pointcard.Points = 0;
+    pointcard.Tier = "Ordinary";
+    pointcard.PunchCard = 1; // Set PunchCard to 1 for every new registration
+
+    string formattedDob = dob.ToString("d/M/yyyy");
+
+    using (StreamWriter writer = new StreamWriter("customers.csv", true))
     {
-        Console.WriteLine("Invalid date format.");
+        // Use properties of the customer object
+        writer.WriteLine($"{name},{idNum},{formattedDob},{pointcard.Tier},{pointcard.Points},{pointcard.PunchCard}");
+        Console.WriteLine("Customer registered successfully!");
     }
 }
 
+// Method to check if a customer is already registered
+bool IsCustomerRegistered(int idNum)
+{
+    using (StreamReader reader = new StreamReader("customers.csv"))
+    {
+        // Skip the header line
+        reader.ReadLine();
 
+        while (!reader.EndOfStream)
+        {
+            string line = reader.ReadLine();
+            string[] values = line.Split(',');
+
+            // Ensure there are enough elements in the array
+            if (values.Length >= 2 && int.TryParse(values[1], out int parsedId))
+            {
+                // Compare ID number to check if the customer is already registered
+                if (parsedId == idNum)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Invalid data format in line: {line}");
+            }
+        }
+    }
+
+    return false;
+}
+
+// Helper method to get valid integer input
+bool GetValidInput(string prompt, out int result)
+{
+    Console.Write(prompt);
+    string input = Console.ReadLine();
+
+    if (!int.TryParse(input, out result))
+    {
+        Console.WriteLine("Invalid input. Please enter an integer.");
+        return false;
+    }
+
+    return true;
+}
+
+// Helper method to get valid date input
+bool GetValidDate(string prompt, out DateTime result)
+{
+    Console.Write(prompt);
+    if (!DateTime.TryParseExact(Console.ReadLine(), "d/M/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
+    {
+        Console.WriteLine("Invalid date format.");
+        return false;
+    }
+
+    return true;
+}
 
 
 // Method for option 4 - Create a customer's order
-
 void CreateCustomerOrder()
 {
     List<Customer> customers = ReadCustomersFromCSV();
