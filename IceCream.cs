@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace T03_Group09_PRG2Assignment
+﻿namespace T03_Group09_PRG2Assignment
 {
     abstract class IceCream
     {
@@ -64,6 +58,59 @@ namespace T03_Group09_PRG2Assignment
         public override string ToString()
         {
             return $"Ice Cream: {Option} - Scoops: {Scoops} - Flavours: {string.Join(", ", Flavours)} - Toppings: {string.Join(", ", Toppings)}";
+        }
+    }
+
+    class VanillaIceCream : IceCream
+    {
+        public VanillaIceCream(string option, int scoops, List<Flavour> flavours, List<Topping> toppings)
+            : base(option, scoops, flavours, toppings)
+        {
+
+        }
+    }
+
+    class ChocolateIceCream : IceCream
+    {
+        public ChocolateIceCream(string option, int scoops, List<Flavour> flavours, List<Topping> toppings)
+            : base(option, scoops, flavours, toppings)
+        {
+
+        }
+    }
+
+    class StrawberryIceCream : IceCream
+    {
+        public StrawberryIceCream(string option, int scoops, List<Flavour> flavours, List<Topping> toppings)
+            : base(option, scoops, flavours, toppings)
+        {
+
+        }
+    }
+    class DurianIceCream : IceCream
+    {
+        public DurianIceCream(string option, int scoops, List<Flavour> flavours, List<Topping> toppings)
+            : base(option, scoops, flavours, toppings)
+        {
+
+        }
+    }
+
+    class UbeIceCream : IceCream
+    {
+        public UbeIceCream(string option, int scoops, List<Flavour> flavours, List<Topping> toppings)
+            : base(option, scoops, flavours, toppings)
+        {
+
+        }
+    }
+
+    class SeasaltIceCream : IceCream
+    {
+        public SeasaltIceCream(string option, int scoops, List<Flavour> flavours, List<Topping> toppings)
+            : base(option, scoops, flavours, toppings)
+        {
+
         }
     }
 }
