@@ -99,74 +99,74 @@ void ReadOrdersCSV(string filePath)
     }
 }
 
-    // Display menu
-    void DisplayMenu()
+// Display menu
+void DisplayMenu()
+{
+    Console.WriteLine();
+    Console.WriteLine("Menu");
+    Console.WriteLine("[1] List all customers information");
+    Console.WriteLine("[2] List all current orders");
+    Console.WriteLine("[3] Register a new customer");
+    Console.WriteLine("[4] Create a customer's order");
+    Console.WriteLine("[5] Display order details of a customer");
+    Console.WriteLine("[6] Modify order details");
+    Console.WriteLine("[0] Exit");
+}
+
+
+string choice;
+
+ReadOrdersCSV("orders.csv");
+ReadCustomersCSV("customers.csv");
+
+// Main method
+while (true)
+{
+    // Call the display menu method
+    DisplayMenu();
+    Console.Write("Enter option: ");
+    choice = Console.ReadLine();
+    if (choice == "0")
+        break;
+
+    else if (choice == "1")
     {
-        Console.WriteLine();
-        Console.WriteLine("Menu");
-        Console.WriteLine("[1] List all customers information");
-        Console.WriteLine("[2] List all current orders");
-        Console.WriteLine("[3] Register a new customer");
-        Console.WriteLine("[4] Create a customer's order");
-        Console.WriteLine("[5] Display order details of a customer");
-        Console.WriteLine("[6] Modify order details");
-        Console.WriteLine("[0] Exit");
+        DisplayCustomerInformation();
     }
 
-
-    string choice;
-
-    ReadOrdersCSV("orders.csv");
-    ReadCustomersCSV("customers.csv");
-
-    // Main method
-    while (true)
+    else if (choice == "2")
     {
-        // Call the display menu method
-        DisplayMenu();
-        Console.Write("Enter option: ");
-        choice = Console.ReadLine();
-        if (choice == "0")
-            break;
-
-        else if (choice == "1")
-        {
-            DisplayCustomerInformation();
-        }
-
-        else if (choice == "2")
-        {
-            DisplayCurrentOrders();
-        }
-
-        else if (choice == "3")
-        {
-            // call method
-        }
-
-        else if (choice == "4")
-        {
-            // call method
-        }
-
-        else if (choice == "5")
-        {
-            DisplayCusOrder();
-        }
-
-        else if (choice == "6")
-        {
-            // call method
-        }
-
-        else
-        {
-            Console.WriteLine("Invalid option, please try again.");
-        }
+        DisplayCurrentOrders();
     }
-    Console.WriteLine("----------");
-    Console.WriteLine("Goodbye!");
-    Console.WriteLine("----------");
+
+    else if (choice == "3")
+    {
+        // call method
+    }
+
+    else if (choice == "4")
+    {
+        // call method
+    }
+
+    else if (choice == "5")
+    {
+        DisplayCusOrder();
+    }
+
+    else if (choice == "6")
+    {
+        // call method
+    }
+
+    else
+    {
+        Console.WriteLine("Invalid option, please try again.");
+    }
+}
+Console.WriteLine("----------");
+Console.WriteLine("Goodbye!");
+Console.WriteLine("----------");
 
 
 
@@ -177,6 +177,10 @@ void DisplayCustomerInformation(string filePath = "customers.csv")
     // Check if the file exists
     if (File.Exists(filePath))
     {
+        // Header and its spacing
+        Console.WriteLine("{0,-10} {1,-10} {2,-12} {3,-17} {4,-17} {5,-17}",
+            "Name", "MemberId", "DOB", "MembershipStatus", "MembershipPoints", "PunchCard");
+
         // Read and display customer information
         using (TextFieldParser parser = new TextFieldParser(filePath))
         {
@@ -191,8 +195,9 @@ void DisplayCustomerInformation(string filePath = "customers.csv")
                 // Read the fields from the CSV
                 string[] fields = parser.ReadFields();
 
-                // Display customer information
-                Console.WriteLine($"Name: {fields[0]}, MemberID: {fields[1]}, DOB: {fields[2]}, MembershipStatus: {fields[3]}, MembershipPoints: {fields[4]}, PunchCard: {fields[5]}");
+                // Display customer details and its spacing
+                Console.WriteLine("{0,-10} {1,-10} {2,-12} {3,-17} {4,-17} {5,-17}",
+                    fields[0], int.Parse(fields[1]), DateOnly.Parse(fields[2]), fields[3], int.Parse(fields[4]), int.Parse(fields[5]));
             }
         }
     }
@@ -201,7 +206,6 @@ void DisplayCustomerInformation(string filePath = "customers.csv")
         Console.WriteLine("The CSV file does not exist.");
     }
 }
-
 
 
 // Method for option 2 - List all current orders, both gold members and regular queue
@@ -216,9 +220,12 @@ void DisplayCurrentOrders()
     // Display order details
     for (int i = 0; i < id.Count; i++)
     {
-        Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
+        if (!TimeFulfilled[i].HasValue)
+        {
+            Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
             id[i], MemberId[i], TimeReceived[i], TimeFulfilled[i], Option[i], scoops[i], Dipped[i], WaffleFlavour[i],
             Flavour1[i], Flavour2[i], Flavour3[i], Topping1[i], Topping2[i], Topping3[i], Topping4[i]);
+        }
     }
 }
 
