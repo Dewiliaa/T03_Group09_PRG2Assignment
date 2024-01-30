@@ -174,7 +174,6 @@ Console.WriteLine("----------");
 
 
 
-
 // Method for option 1 - List all customers
 void DisplayCustomerInformation(string filePath = "customers.csv")
 {
@@ -342,6 +341,8 @@ bool GetValidDate(string prompt, out DateTime result)
 // Method for option 4 - Create a customer's order
 void CreateCustomerOrder()
 {
+    string binDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin");
+    string filePath = Path.Combine(binDirectory, "customers.csv");
     List<Customer> customers = ReadCustomersFromCSV();
 
     Console.WriteLine("List of Customers:");
@@ -562,7 +563,7 @@ static List<Customer> ReadCustomersFromCSV(string filePath = "customers.csv")
                     int idNum = int.Parse(data[1].Trim());
 
                     // Ensure consistent date parsing
-                    if (DateTime.TryParseExact(data[2].Trim(), "dd/mm/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob))
+                    if (DateTime.TryParseExact(data[2].Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob))
                     {
                         string tier = data[3].Trim();
                         int points = int.Parse(data[4].Trim());
