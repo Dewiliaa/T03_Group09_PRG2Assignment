@@ -212,7 +212,7 @@ void DisplayCustomerInformation(string filePath = "customers.csv")
 
 
 // Method for option 2 - List all current orders, both gold members and regular queue
-void DisplayCurrentOrders()
+void DisplayCurrentOrders(string filePath = "orders.csv")
 {
     Console.WriteLine("List of all current orders:");
 
@@ -220,15 +220,31 @@ void DisplayCurrentOrders()
     Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
         "Id", "MemberId", "TimeReceived", "TimeFulfilled", "Option", "Scoops", "Dipped", "WaffleFlavour", "Flavour1", "Flavour2", "Flavour3", "Topping1", "Topping2", "Topping3", "Topping4");
 
-    // Display order details
-    for (int i = 0; i < id.Count; i++)
+    try
     {
-        if (!TimeFulfilled[i].HasValue)
+        using (StreamReader sr = new StreamReader(filePath))
         {
-            Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
-            id[i], MemberId[i], TimeReceived[i], TimeFulfilled[i], Option[i], scoops[i], Dipped[i], WaffleFlavour[i],
-            Flavour1[i], Flavour2[i], Flavour3[i], Topping1[i], Topping2[i], Topping3[i], Topping4[i]);
+            string? s = sr.ReadLine(); // Skip the header
+            while ((s = sr.ReadLine()) != null)
+            {
+                string[] data = s.Split(',');
+
+                bool isDipped = !string.IsNullOrEmpty(data[6]) && bool.Parse(data[6]); // Parse boolean with a fallback for empty string
+
+                // Check if TimeFulfilled is null before displaying the order
+                if (string.IsNullOrEmpty(data[3]))
+                {
+                    Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
+                        data[0], data[1], DateTime.Parse(data[2]).ToString("dd/MM/yyyy HH:mm"),
+                        string.IsNullOrEmpty(data[3]) ? "" : DateTime.Parse(data[3]).ToString("dd/MM/yyyy HH:mm"),
+                        data[4], data[5], isDipped, data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14]);
+                }
+            }
         }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error reading orders from file: {ex.Message}");
     }
 }
 
@@ -274,6 +290,14 @@ void RegisterNewCustomer()
         // Use properties of the customer object
         writer.WriteLine($"{name},{idNum},{formattedDob},{pointcard.Tier},{pointcard.Points},{pointcard.PunchCard}");
         Console.WriteLine("Customer registered successfully!");
+
+        // Update in-memory lists
+        Name.Add(name);
+        MemberIId.Add(idNum);
+        DOB.Add(DateOnly.FromDateTime(dob));
+        MembershipStatus.Add(pointcard.Tier);
+        MembershipPoints.Add(pointcard.Points);
+        PunchCard.Add(pointcard.PunchCard);
     }
 }
 
@@ -341,83 +365,149 @@ bool GetValidDate(string prompt, out DateTime result)
 // Method for option 4 - Create a customer's order
 void CreateOrder()
 {
-    // List all customers
-    Console.WriteLine("List of all customers: ");
-    foreach (var customerName in Name)
+    while (true)
     {
-        Console.WriteLine(customerName);
-    }
-
-    // Prompt user to select a customer
-    Console.Write("Enter the name of the customer: ");
-    string selectedCustomerName = Console.ReadLine();
-
-    // Find the MemberId for the selected customer
-    int selectedMemberId = MemberIId[Name.FindIndex(name => name.Trim().Equals(selectedCustomerName, StringComparison.OrdinalIgnoreCase))];
-
-    // Check if the entered name is in the list (case-insensitive and trimming whitespace)
-    if (selectedMemberId != 0)
-    {
-        Console.WriteLine($"Selected customer: {selectedCustomerName} (MemberId: {selectedMemberId})");
-
-        // Create a new order
-        List<string> options = new List<string>();
-        List<int> scoopsList = new List<int>();
-        List<bool> dippedList = new List<bool>();
-        List<string> waffleFlavours = new List<string>();
-        List<string> flavours = new List<string>();
-        List<string> toppings = new List<string>();
-
-        do
+        // List all customers
+        Console.WriteLine("List of all customers: ");
+        foreach (var customerName in Name)
         {
-            // Prompt user to enter ice cream order details
-            Console.Write("Enter ice cream option: ");
-            string iceCreamOption = Console.ReadLine();
-
-            Console.Write("Enter number of scoops: ");
-            int scoopsCount = int.Parse(Console.ReadLine());
-
-            Console.Write("Enter waffle flavour: ");
-            string waffleFlavour = Console.ReadLine();
-
-            Console.Write("Enter flavour: ");
-            string flavour = Console.ReadLine();
-
-            Console.Write("Enter topping: ");
-            string topping = Console.ReadLine();
-
-            Console.Write("Is it dipped? (True/False): ");
-            bool isDipped = bool.Parse(Console.ReadLine());
-
-            // Add details to the lists
-            options.Add(iceCreamOption);
-            scoopsList.Add(scoopsCount);
-            dippedList.Add(isDipped);
-            waffleFlavours.Add(waffleFlavour);
-            flavours.Add(flavour);
-            toppings.Add(topping);
-
-            // Prompt user if they want to add another ice cream
-            Console.Write("Add another ice cream? (Y/N): ");
-        } while (Console.ReadLine()?.ToUpper() == "Y");
-
-        // Display the order details
-        Console.WriteLine($"Order for {selectedCustomerName} (MemberId: {selectedMemberId}):");
-
-        for (int i = 0; i < options.Count; i++)
-        {
-            Console.WriteLine($"Ice Cream {i + 1} - Option: {options[i]}, Scoops: {scoopsList[i]}, Dipped: {dippedList[i]}, " +
-                              $"Waffle Flavour: {waffleFlavours[i]}, Flavour: {flavours[i]}, Topping: {toppings[i]}");
+            Console.WriteLine(customerName);
         }
 
-        // You can process the order details further or save them to your data structures.
-    }
-    else
-    {
-        Console.WriteLine($"Customer with the name '{selectedCustomerName}' not found.");
+        // Prompt user to select a customer
+        Console.Write("Enter the name of the customer: ");
+        string selectedCustomerName = Console.ReadLine();
+
+        // Find the MemberId for the selected customer
+        int selectedMemberId = MemberIId[Name.FindIndex(name => name.Trim().Equals(selectedCustomerName, StringComparison.OrdinalIgnoreCase))];
+
+        // Check if the entered name is in the list (case-insensitive and trimming whitespace)
+        if (selectedMemberId != 0)
+        {
+            Console.WriteLine($"Selected customer: {selectedCustomerName} (MemberId: {selectedMemberId})");
+
+            // Create a new order
+            List<string> options = new List<string>();
+            List<int> scoopsList = new List<int>();
+            List<bool> dippedList = new List<bool>();
+            List<string> waffleFlavours = new List<string>();
+            List<string> flavours = new List<string>();
+            List<string> toppings1 = new List<string>();
+            List<string> toppings2 = new List<string>();
+            List<string> toppings3 = new List<string>();
+            List<string> toppings4 = new List<string>();
+
+            do
+            {
+                // Prompt user to enter ice cream order details
+                Console.Write("Enter ice cream option (cone,waffle,cup): ");
+                string iceCreamOption = Console.ReadLine();
+
+                Console.Write("Enter number of scoops (1,2,3):");
+                int scoopsCount = int.Parse(Console.ReadLine());
+
+                Console.Write("Enter waffle flavour(Pandan, Redvelvet, Charcoal): ");
+                string waffleFlavour = Console.ReadLine();
+
+                Console.Write("Enter flavour 1 (Vanilla, Chocolate, Strawberry, SeaSalt, Ube, Durian): ");
+                string flavour = Console.ReadLine();
+
+                Console.Write("Enter flavour 2 (Vanilla, Chocolate, Strawberry, SeaSalt, Ube, Durian): ");
+                string flavour2 = Console.ReadLine();
+
+                Console.Write("Enter flavour 3 (Vanilla, Chocolate, Strawberry, SeaSalt, Ube, Durian): ");
+                string flavour3 = Console.ReadLine();
+
+                Console.Write("Enter topping 1(Sprinkles, Mochi, Sago, Oreo): ");
+                string topping1 = Console.ReadLine();
+
+                Console.Write("Enter topping 2 (Sprinkles, Mochi, Sago, Oreo): ");
+                string topping2 = Console.ReadLine();
+
+                Console.Write("Enter topping 3 (Sprinkles, Mochi, Sago, Oreo): ");
+                string topping3 = Console.ReadLine();
+
+                Console.Write("Enter topping 4 (Sprinkles, Mochi, Sago, Oreo): ");
+                string topping4 = Console.ReadLine();
+
+                Console.Write("Is it dipped? (Yes/No): ");
+                bool isDipped = ParseYesNoToBool(Console.ReadLine());
+
+                // Add details to the lists
+                options.Add(iceCreamOption);
+                scoopsList.Add(scoopsCount);
+                dippedList.Add(isDipped);
+                waffleFlavours.Add(waffleFlavour);
+                flavours.Add(flavour);
+                toppings1.Add(topping1);
+                toppings2.Add(topping2);
+                toppings3.Add(topping3);
+                toppings4.Add(topping4);
+
+                // Prompt user if they want to add another ice cream
+                Console.Write("Add another ice cream? (Y/N): ");
+            } while (Console.ReadLine()?.ToUpper() == "Y");
+
+            // Display the order details
+            Console.WriteLine($"Order for {selectedCustomerName} (MemberId: {selectedMemberId}):");
+
+            for (int i = 0; i < options.Count; i++)
+            {
+                Console.WriteLine($"Ice Cream {i + 1} - Option: {options[i]}, Scoops: {scoopsList[i]}, Dipped: {dippedList[i]}, " +
+                                  $"Waffle Flavour: {waffleFlavours[i]}, Flavour: {flavours[i]}, " +
+                                  $"Topping 1: {toppings1[i]}, Topping 2: {toppings2[i]}, " +
+                                  $"Topping 3: {toppings3[i]}, Topping 4: {toppings4[i]}");
+            }
+
+            // Save the order details to orders.csv
+            SaveOrderToCsv(selectedMemberId, options, scoopsList, dippedList, waffleFlavours, flavours, toppings1, toppings2, toppings3, toppings4);
+        }
+        else
+        {
+            Console.WriteLine($"Customer with the name '{selectedCustomerName}' not found.");
+        }
+
+        // Ask if the user wants to create another order
+        Console.Write("Do you want to create another order? (Y/N): ");
+        if (Console.ReadLine()?.ToUpper() != "Y")
+        {
+            break; // Exit the loop if the user doesn't want to create another order
+        }
     }
 }
 
+
+bool ParseYesNoToBool(string input)
+{
+    return input?.Trim().ToUpper() == "YES";
+}
+
+void SaveOrderToCsv(int memberId, List<string> options, List<int> scoops, List<bool> dipped,
+                    List<string> waffleFlavours, List<string> flavours,
+                    List<string> toppings1, List<string> toppings2, List<string> toppings3, List<string> toppings4)
+{
+    try
+    {
+        using (StreamWriter writer = new StreamWriter("orders.csv", true))
+        {
+            for (int i = 0; i < options.Count; i++)
+            {
+                // Auto-generate order ID and time received
+                int orderId = id.Count + 1;
+                DateTime timeReceived = DateTime.Now;
+
+                // Write order details to CSV
+                writer.WriteLine($"{orderId},{memberId},{timeReceived},{null},{options[i]},{scoops[i]},{dipped[i]}," +
+                                 $"{waffleFlavours[i]},{flavours[i]},{null},{null}," +
+                                 $"{toppings1[i]},{toppings2[i]},{toppings3[i]},{toppings4[i]}");
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error saving order to file: {ex.Message}");
+    }
+}
 
 
 // Method for option 5 - Display order details of a customer
