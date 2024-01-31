@@ -239,14 +239,13 @@ void DisplayCurrentOrders(string filePath = "orders.csv")
     {
         using (StreamReader sr = new StreamReader(filePath))
         {
-            string? s = sr.ReadLine(); // Skip the header
+            string? s = sr.ReadLine();
             while ((s = sr.ReadLine()) != null)
             {
                 string[] data = s.Split(',');
 
-                bool isDipped = !string.IsNullOrEmpty(data[6]) && bool.Parse(data[6]); // Parse boolean with a fallback for empty string
+                bool isDipped = !string.IsNullOrEmpty(data[6]) && bool.Parse(data[6]);
 
-                // Check if TimeFulfilled is null before displaying the order
                 if (string.IsNullOrEmpty(data[3]))
                 {
                     Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
@@ -528,25 +527,22 @@ void SaveOrderToCsv(int memberId, List<string> options, List<int> scoops, List<b
 // Method for option 5 - Display order details of a customer
 void DisplayCusOrder(string filePath = "orders.csv")
 {
-    // List all customers
     Console.WriteLine("List of all customers: ");
     foreach (var customerName in Name)
     {
         Console.WriteLine(customerName);
     }
 
-    // Prompt user to select a name
     Console.Write("Enter the name of the customer: ");
     string cusName = Console.ReadLine();
 
-    // Check if the entered name is in the list (case-insensitive and trimming whitespace)
+    // Check if the entered name is in the list
     int selectedMemberId = MemberIId[Name.FindIndex(name => name.Trim().Equals(cusName, StringComparison.OrdinalIgnoreCase))];
 
     if (selectedMemberId != 0)
     {
         Console.WriteLine($"Order details for {cusName} (MemberId: {selectedMemberId})");
 
-        // Header and its spacing
         Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
             "Id", "MemberId", "TimeReceived", "TimeFulfilled", "Option", "Scoops", "Dipped", "WaffleFlavour", "Flavour1", "Flavour2", "Flavour3", "Topping1", "Topping2", "Topping3", "Topping4");
 
@@ -554,22 +550,19 @@ void DisplayCusOrder(string filePath = "orders.csv")
         {
             using (StreamReader sr = new StreamReader(filePath))
             {
-                string? s = sr.ReadLine(); // Skip the header
+                string? s = sr.ReadLine();
                 while ((s = sr.ReadLine()) != null)
                 {
                     string[] data = s.Split(',');
 
                     if (int.Parse(data[1]) == selectedMemberId)
                     {
-                        // Check for empty string before parsing as Boolean
                         bool isDipped = !string.IsNullOrEmpty(data[6]) && bool.Parse(data[6]);
 
                         Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
                             data[0], data[1], DateTime.Parse(data[2]).ToString("dd/MM/yyyy HH:mm"),
                             string.IsNullOrEmpty(data[3]) ? "Not fulfilled" : DateTime.Parse(data[3]).ToString("dd/MM/yyyy HH:mm"),
-                            data[4], data[5], isDipped, data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14]);
-
-                        
+                            data[4], data[5], isDipped, data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14]);                       
                     }
                 }
             }
@@ -600,14 +593,14 @@ void ModifyOrder(string filePath = "orders.csv")
     Console.Write("Enter the name of the customer: ");
     string cusName = Console.ReadLine();
 
-    // Check if the entered name is in the list (case-insensitive and trimming whitespace)
+    // Check if name is in the list
     int selectedMemberId = MemberIId[Name.FindIndex(name => name.Trim().Equals(cusName, StringComparison.OrdinalIgnoreCase))];
 
     if (selectedMemberId != 0)
     {
         Console.WriteLine($"Order details for {cusName} (MemberId: {selectedMemberId})");
 
-        // Display the orders for the selected customer with empty TimeFulfilled
+        // Display the orders
         DisplayOrdersForCustomer(filePath, selectedMemberId);
 
         // Prompt user for the desired action
@@ -626,7 +619,6 @@ void ModifyOrder(string filePath = "orders.csv")
                 break;
 
             case 2:
-                // Add a new ice cream order (reuse the logic from Option 4)
                 CreateOrder();
                 break;
 
@@ -662,12 +654,12 @@ void DisplayOrdersForCustomer(string filePath, int selectedMemberId)
     {
         using (StreamReader sr = new StreamReader(filePath))
         {
-            string? s = sr.ReadLine(); // Skip the header
+            string? s = sr.ReadLine(); 
             while ((s = sr.ReadLine()) != null)
             {
                 string[] data = s.Split(',');
 
-                if (int.Parse(data[1]) == selectedMemberId && string.IsNullOrEmpty(data[3])) // Check for empty TimeFulfilled
+                if (int.Parse(data[1]) == selectedMemberId && string.IsNullOrEmpty(data[3]))
                 {
                     // Check for empty string before parsing as Boolean
                     bool isDipped = !string.IsNullOrEmpty(data[6]) && bool.Parse(data[6]);
@@ -688,7 +680,7 @@ void DisplayOrdersForCustomer(string filePath, int selectedMemberId)
 
 void ModifyExistingIceCream(string filePath, int memberID)
 {
-    // Find all orders associated with the MemberId where "TimeFulfilled" is empty
+    // Find all orders with the MemberID
     List<string[]> memberOrders = FindIncompleteOrdersByMemberId(filePath, memberID);
 
     if (memberOrders.Count > 0)
@@ -702,7 +694,6 @@ void ModifyExistingIceCream(string filePath, int memberID)
 
         if (selectedOrder != null)
         {
-            // Prompt user for modifications
             Console.WriteLine("Choose what to modify:");
             Console.WriteLine("[1] Option");
             Console.WriteLine("[2] Scoops");
@@ -729,7 +720,6 @@ void ModifyExistingIceCream(string filePath, int memberID)
                     break;
             }
 
-            // Update the order info accordingly
             UpdateOrder(filePath, memberID, orderId, selectedOrder);
         }
         else
@@ -748,20 +738,20 @@ void ModifyOption(string[] order)
     Console.Write("Enter new option (Cone, Cup, or Waffle): ");
     string newOption = Console.ReadLine();
 
-    // If the previous option was "Cone" and the new option is "Waffle," set "Dipped" to empty
+    // If the previous option was "Cone" - set "Dipped" to empty
     if (order[4].Equals("Cone", StringComparison.OrdinalIgnoreCase) && newOption.Equals("Waffle", StringComparison.OrdinalIgnoreCase))
     {
-        order[6] = ""; // Set "Dipped" to empty
+        order[6] = "";
     }
-    // If the new option is "Cup," set "Dipped" to empty
+    
     else if (newOption.Equals("Cup", StringComparison.OrdinalIgnoreCase))
     {
-        order[6] = ""; // Set "Dipped" to empty
+        order[6] = "";
     }
     else if (newOption.Equals("Cone", StringComparison.OrdinalIgnoreCase))
     {
         // Additional prompt for Cone
-        Console.Write("Do you want it dipped? (yes/no): ");
+        Console.Write("Do you want it dipped? (True/False): ");
         order[6] = Console.ReadLine();
     }
 
@@ -788,7 +778,7 @@ void ModifyScoops(string[] order)
 
         if (int.TryParse(Console.ReadLine(), out numberOfScoops) && numberOfScoops >= 0 && numberOfScoops <= 3)
         {
-            break; // Valid input, exit the loop
+            break;
         }
         else
         {
@@ -839,12 +829,11 @@ List<string[]> FindIncompleteOrdersByMemberId(string filePath, int memberId)
     {
         using (StreamReader sr = new StreamReader(filePath))
         {
-            string? header = sr.ReadLine(); // Skip the header
+            string? header = sr.ReadLine();
             while ((header = sr.ReadLine()) != null)
             {
                 string[] data = header.Split(',');
 
-                // Check if the order belongs to the provided MemberId and "TimeFulfilled" is empty
                 if (int.Parse(data[1]) == memberId && string.IsNullOrEmpty(data[3]))
                 {
                     incompleteOrders.Add(data);
@@ -864,12 +853,10 @@ void UpdateOrder(string filePath, int memberId, int orderId, string[] updatedOrd
 {
     try
     {
-        // Read all lines from the file
         string[] lines = File.ReadAllLines(filePath);
 
-        // Find the index of the order in the lines array
         int orderIndex = -1;
-        for (int i = 1; i < lines.Length; i++) // Start from 1 to skip the header
+        for (int i = 1; i < lines.Length; i++)
         {
             string[] data = lines[i].Split(',');
 
@@ -885,7 +872,6 @@ void UpdateOrder(string filePath, int memberId, int orderId, string[] updatedOrd
         {
             lines[orderIndex] = string.Join(",", updatedOrder);
 
-            // Write the updated lines back to the file
             File.WriteAllLines(filePath, lines);
             Console.WriteLine("Order updated successfully.");
         }
@@ -902,18 +888,15 @@ void UpdateOrder(string filePath, int memberId, int orderId, string[] updatedOrd
 
 void DeleteOrder(string filePath, int selectedMemberId)
 {
-    // Prompt user to select which order to delete
     Console.Write("Enter the ID of the order to delete: ");
     int orderId = int.Parse(Console.ReadLine());
 
     try
     {
-        // Read all lines from the file
         string[] lines = File.ReadAllLines(filePath);
 
-        // Find the index of the order in the lines array
         int orderIndex = -1;
-        for (int i = 1; i < lines.Length; i++) // Start from 1 to skip the header
+        for (int i = 1; i < lines.Length; i++)
         {
             string[] data = lines[i].Split(',');
 
@@ -930,7 +913,6 @@ void DeleteOrder(string filePath, int selectedMemberId)
             List<string> updatedLines = new List<string>(lines);
             updatedLines.RemoveAt(orderIndex);
 
-            // Write the updated lines back to the file
             File.WriteAllLines(filePath, updatedLines);
             Console.WriteLine("Order deleted successfully.");
         }
@@ -946,17 +928,11 @@ void DeleteOrder(string filePath, int selectedMemberId)
 }
 
 
+// Method for option 7 - Display total charges
 void DisplayMonthlyAndTotalCharges(int year)
 {
     // Filter orders by year
-    List<int> filteredOrdersIndices = new List<int>();
-    for (int i = 0; i < id.Count; i++)
-    {
-        if (TimeFulfilled[i].HasValue && TimeFulfilled[i].Value.Year == year)
-        {
-            filteredOrdersIndices.Add(i);
-        }
-    }
+    List<int> filteredOrdersIndices = GetFilteredOrdersIndicesByYear(year);
 
     if (filteredOrdersIndices.Count == 0)
     {
@@ -965,11 +941,7 @@ void DisplayMonthlyAndTotalCharges(int year)
     }
 
     // Initialize monthly totals
-    Dictionary<int, decimal> monthlyTotals = new Dictionary<int, decimal>();
-    for (int month = 1; month <= 12; month++)
-    {
-        monthlyTotals[month] = 0;
-    }
+    Dictionary<int, decimal> monthlyTotals = InitializeMonthlyTotals();
 
     // Calculate monthly and total charges
     decimal totalCharges = 0;
@@ -979,66 +951,75 @@ void DisplayMonthlyAndTotalCharges(int year)
         totalCharges += orderTotal;
 
         // Update monthly total
-        monthlyTotals[TimeFulfilled[index].Value.Month] += orderTotal;
+        int month = TimeFulfilled[index].Value.Month; // Extract month from the fulfillment date
+        monthlyTotals[month] += orderTotal;
     }
 
     // Display monthly breakdown
-    Console.WriteLine($"Monthly Charged Amounts Breakdown for {year}:");
-    for (int month = 1; month <= 12; month++)
-    {
-        Console.WriteLine($"{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)} {year}: ${monthlyTotals[month]:F2}");
-    }
+    DisplayMonthlyBreakdown(year, monthlyTotals);
 
     // Display total charged amount
     Console.WriteLine($"Total Charged Amount for {year}: ${totalCharges:F2}");
 }
 
+List<int> GetFilteredOrdersIndicesByYear(int year)
+{
+    List<int> filteredOrdersIndices = new List<int>();
+    for (int i = 0; i < id.Count; i++)
+    {
+        if (TimeFulfilled[i].HasValue && TimeFulfilled[i].Value.Year == year)
+        {
+            filteredOrdersIndices.Add(i);
+        }
+    }
+    return filteredOrdersIndices;
+}
+
+Dictionary<int, decimal> InitializeMonthlyTotals()
+{
+    Dictionary<int, decimal> monthlyTotals = new Dictionary<int, decimal>();
+    for (int month = 1; month <= 12; month++)
+    {
+        monthlyTotals[month] = 0;
+    }
+    return monthlyTotals;
+}
+
+void DisplayMonthlyBreakdown(int year, Dictionary<int, decimal> monthlyTotals)
+{
+    Console.WriteLine($"Monthly Charged Amounts Breakdown for {year}:");
+    for (int month = 1; month <= 12; month++)
+    {
+        Console.WriteLine($"{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)} {year}: ${monthlyTotals[month]:F2}");
+    }
+}
+
 decimal CalculateOrderTotal(int index)
 {
-    // Prices
-    decimal basePrice = 0;
-    decimal premiumFlavourPrice = 2;
-    decimal toppingPrice = 1;
+    decimal basePrice = GetBasePrice(index);
+    decimal premiumFlavourCharge = GetPremiumFlavourCharge(index);
+    decimal toppingCharge = GetToppingCharge(index);
 
-    // Calculate base price based on option
-    switch (Option[index].ToLower())
-    {
-        case "cup":
-            basePrice = GetCupPrice(index);
-            break;
-
-        case "cone":
-            basePrice = GetConePrice(index);
-            break;
-
-        case "waffle":
-            basePrice = GetWafflePrice(index);
-            break;
-    }
-
-    // Debug lines
-    Console.WriteLine($"Order {index + 1} - Flavour: {Flavour1[index]}");
-    Console.WriteLine($"Order {index + 1} - Scoops: {scoops[index]}");
-
-    // Calculate additional charges for premium flavour and toppings
-    decimal premiumFlavourCharge = Flavour1[index].ToLower() switch
-    {
-        "durian" or "ube" or "sea salt" => premiumFlavourPrice * scoops[index],
-        _ => 0
-    };
-
-    decimal toppingCharge = toppingPrice * GetToppingsCount(index); // Use GetToppingsCount method
-
-    // Debug lines
-    Console.WriteLine($"Order {index + 1} - Base Price: ${basePrice:F2}");
-    Console.WriteLine($"Order {index + 1} - Premium Flavour Charge: ${premiumFlavourCharge:F2}");
-    Console.WriteLine($"Order {index + 1} - Topping Charge: ${toppingCharge:F2}");
-
-    // Calculate total order price
     decimal totalOrderPrice = basePrice + premiumFlavourCharge + toppingCharge;
+
     Console.WriteLine($"Order {index + 1} - Total Order Price: ${totalOrderPrice:F2}");
 
     return totalOrderPrice;
+}
+
+decimal GetBasePrice(int index)
+{
+    switch (Option[index].ToLower())
+    {
+        case "cup":
+            return GetCupPrice(index);
+        case "cone":
+            return GetConePrice(index);
+        case "waffle":
+            return GetWafflePrice(index);
+        default:
+            return 0;
+    }
 }
 
 decimal GetCupPrice(int index)
@@ -1058,17 +1039,15 @@ decimal GetCupPrice(int index)
 
 decimal GetConePrice(int index)
 {
-    switch (scoops[index])
+    decimal basePrice = scoops[index] switch
     {
-        case 1:
-            return 4.00m + (Dipped[index] ? 2.00m : 0);
-        case 2:
-            return 5.50m + (Dipped[index] ? 2.00m : 0);
-        case 3:
-            return 6.50m + (Dipped[index] ? 2.00m : 0);
-        default:
-            return 0;
-    }
+        1 => 4.00m + (Dipped[index] ? 2.00m : 0),
+        2 => 5.50m + (Dipped[index] ? 2.00m : 0),
+        3 => 6.50m + (Dipped[index] ? 2.00m : 0),
+        _ => 0
+    };
+
+    return basePrice;
 }
 
 decimal GetWafflePrice(int index)
@@ -1076,24 +1055,37 @@ decimal GetWafflePrice(int index)
     decimal basePrice = 7.00m;
     decimal waffleFlavourPrice = 3.00m;
 
-    // Check if a premium flavour is selected and add the additional cost
-    decimal premiumFlavourCharge = Flavour1[index].ToLower() switch
-    {
-        "durian" or "ube" or "sea salt" => 2.00m * scoops[index], // Premium flavour charge per scoop
-        _ => 0
-    };
-
-    // Check if a special waffle flavour is selected and add the additional cost
-    decimal waffleFlavourCharge = Flavour1[index].ToLower() switch
-    {
-        "red velvet" or "charcoal" or "pandan" => 3.00m,
-        _ => 0
-    };
+    decimal premiumFlavourCharge = GetPremiumFlavourCharge(index);
+    decimal waffleFlavourCharge = GetWaffleFlavourCharge(index);
 
     return basePrice + (scoops[index] * waffleFlavourPrice) + premiumFlavourCharge + waffleFlavourCharge;
 }
 
-// Add a method to get the count of toppings for an order
+decimal GetPremiumFlavourCharge(int index)
+{
+    return Flavour1[index].ToLower() switch
+    {
+        "durian" or "ube" or "sea salt" => 2.00m * scoops[index],
+        _ => 0
+    };
+}
+
+decimal GetWaffleFlavourCharge(int index)
+{
+    return Flavour2[index].ToLower() switch
+    {
+        "red velvet" or "charcoal" or "pandan" => 3.00m,
+        _ => 0
+    };
+}
+
+decimal GetToppingCharge(int index)
+{
+    decimal toppingPrice = 1.00m; // Assuming constant topping cost
+
+    return toppingPrice * GetToppingsCount(index);
+}
+
 int GetToppingsCount(int index)
 {
     return Topping1[index].Length + Topping2[index].Length +
