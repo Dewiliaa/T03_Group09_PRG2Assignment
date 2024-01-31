@@ -33,6 +33,8 @@ List<int> PunchCard = new List<int>();
 Dictionary<int, Queue<Order>> GoldOrderQueues = new Dictionary<int, Queue<Order>>();
 Dictionary<int, Queue<Order>> RegularOrderQueues = new Dictionary<int, Queue<Order>>();
 
+int lastOrderId = 4;
+
 void ReadCustomersCSV(string filePath)
 {
     try
@@ -67,7 +69,6 @@ void ReadCustomersCSV(string filePath)
         Console.WriteLine($"Error reading customers from file: {ex.Message}");
     }
 }
-
 void ReadOrdersCSV(string filePath)
 {
     try
@@ -114,6 +115,7 @@ void DisplayMenu()
     Console.WriteLine("[4] Create a customer's order");
     Console.WriteLine("[5] Display order details of a customer");
     Console.WriteLine("[6] Modify order details");
+    Console.WriteLine("[7] Display monthly charged amount & total charged amount for the year");
     Console.WriteLine("[0] Exit");
 }
 
@@ -161,6 +163,19 @@ while (true)
     else if (choice == "6")
     {
         ModifyOrder();
+    }
+
+    else if (choice == "7")
+    {
+        Console.Write("Enter the year: ");
+        if (int.TryParse(Console.ReadLine(), out int year))
+        {
+            DisplayMonthlyAndTotalCharges(year);
+        }
+        else
+        {
+            Console.WriteLine("Invalid year format. Please enter a valid year.");
+        }
     }
 
     else
@@ -493,7 +508,7 @@ void SaveOrderToCsv(int memberId, List<string> options, List<int> scoops, List<b
             for (int i = 0; i < options.Count; i++)
             {
                 // Auto-generate order ID and time received
-                int orderId = id.Count + 1;
+                int orderId = ++lastOrderId; // Increment the order ID for each new order
                 DateTime timeReceived = DateTime.Now;
 
                 // Write order details to CSV
@@ -928,4 +943,159 @@ void DeleteOrder(string filePath, int selectedMemberId)
     {
         Console.WriteLine($"Error deleting order: {ex.Message}");
     }
+}
+
+
+void DisplayMonthlyAndTotalCharges(int year)
+{
+    // Filter orders by year
+    List<int> filteredOrdersIndices = new List<int>();
+    for (int i = 0; i < id.Count; i++)
+    {
+        if (TimeFulfilled[i].HasValue && TimeFulfilled[i].Value.Year == year)
+        {
+            filteredOrdersIndices.Add(i);
+        }
+    }
+
+    if (filteredOrdersIndices.Count == 0)
+    {
+        Console.WriteLine($"No orders fulfilled in the year {year}.");
+        return;
+    }
+
+    // Initialize monthly totals
+    Dictionary<int, decimal> monthlyTotals = new Dictionary<int, decimal>();
+    for (int month = 1; month <= 12; month++)
+    {
+        monthlyTotals[month] = 0;
+    }
+
+    // Calculate monthly and total charges
+    decimal totalCharges = 0;
+    foreach (int index in filteredOrdersIndices)
+    {
+        decimal orderTotal = CalculateOrderTotal(index);
+        totalCharges += orderTotal;
+
+        // Update monthly total
+        monthlyTotals[TimeFulfilled[index].Value.Month] += orderTotal;
+    }
+
+    // Display monthly breakdown
+    Console.WriteLine($"Monthly Charged Amounts Breakdown for {year}:");
+    for (int month = 1; month <= 12; month++)
+    {
+        Console.WriteLine($"{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)} {year}: ${monthlyTotals[month]:F2}");
+    }
+
+    // Display total charged amount
+    Console.WriteLine($"Total Charged Amount for {year}: ${totalCharges:F2}");
+}
+
+decimal CalculateOrderTotal(int index)
+{
+    // Prices
+    decimal basePrice = 0;
+    decimal premiumFlavourPrice = 2;
+    decimal toppingPrice = 1;
+
+    // Calculate base price based on option
+    switch (Option[index].ToLower())
+    {
+        case "cup":
+            basePrice = GetCupPrice(index);
+            break;
+
+        case "cone":
+            basePrice = GetConePrice(index);
+            break;
+
+        case "waffle":
+            basePrice = GetWafflePrice(index);
+            break;
+    }
+
+    // Debug lines
+    Console.WriteLine($"Order {index + 1} - Flavour: {Flavour1[index]}");
+    Console.WriteLine($"Order {index + 1} - Scoops: {scoops[index]}");
+
+    // Calculate additional charges for premium flavour and toppings
+    decimal premiumFlavourCharge = Flavour1[index].ToLower() switch
+    {
+        "durian" or "ube" or "sea salt" => premiumFlavourPrice * scoops[index],
+        _ => 0
+    };
+
+    decimal toppingCharge = toppingPrice * GetToppingsCount(index); // Use GetToppingsCount method
+
+    // Debug lines
+    Console.WriteLine($"Order {index + 1} - Base Price: ${basePrice:F2}");
+    Console.WriteLine($"Order {index + 1} - Premium Flavour Charge: ${premiumFlavourCharge:F2}");
+    Console.WriteLine($"Order {index + 1} - Topping Charge: ${toppingCharge:F2}");
+
+    // Calculate total order price
+    decimal totalOrderPrice = basePrice + premiumFlavourCharge + toppingCharge;
+    Console.WriteLine($"Order {index + 1} - Total Order Price: ${totalOrderPrice:F2}");
+
+    return totalOrderPrice;
+}
+
+decimal GetCupPrice(int index)
+{
+    switch (scoops[index])
+    {
+        case 1:
+            return 4.00m;
+        case 2:
+            return 5.50m;
+        case 3:
+            return 6.50m;
+        default:
+            return 0;
+    }
+}
+
+decimal GetConePrice(int index)
+{
+    switch (scoops[index])
+    {
+        case 1:
+            return 4.00m + (Dipped[index] ? 2.00m : 0);
+        case 2:
+            return 5.50m + (Dipped[index] ? 2.00m : 0);
+        case 3:
+            return 6.50m + (Dipped[index] ? 2.00m : 0);
+        default:
+            return 0;
+    }
+}
+
+decimal GetWafflePrice(int index)
+{
+    decimal basePrice = 7.00m;
+    decimal waffleFlavourPrice = 3.00m;
+
+    // Check if a premium flavour is selected and add the additional cost
+    decimal premiumFlavourCharge = Flavour1[index].ToLower() switch
+    {
+        "durian" or "ube" or "sea salt" => 2.00m * scoops[index], // Premium flavour charge per scoop
+        _ => 0
+    };
+
+    // Check if a special waffle flavour is selected and add the additional cost
+    decimal waffleFlavourCharge = Flavour1[index].ToLower() switch
+    {
+        "red velvet" or "charcoal" or "pandan" => 3.00m,
+        _ => 0
+    };
+
+    return basePrice + (scoops[index] * waffleFlavourPrice) + premiumFlavourCharge + waffleFlavourCharge;
+}
+
+// Add a method to get the count of toppings for an order
+int GetToppingsCount(int index)
+{
+    return Topping1[index].Length + Topping2[index].Length +
+           Topping3[index].Length + Topping4[index].Length;
 }
