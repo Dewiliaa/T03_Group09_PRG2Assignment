@@ -1081,7 +1081,7 @@ decimal GetWaffleFlavourCharge(int index)
 
 decimal GetToppingCharge(int index)
 {
-    decimal toppingPrice = 1.00m; // Assuming constant topping cost
+    decimal toppingPrice = 1.00m;
 
     return toppingPrice * GetToppingsCount(index);
 }
