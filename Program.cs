@@ -600,13 +600,14 @@ void ModifyOrder(string filePath = "orders.csv")
         Console.WriteLine("[1] Modify existing ice cream order");
         Console.WriteLine("[2] Add a new ice cream order");
         Console.WriteLine("[3] Delete existing ice cream order");
+        Console.WriteLine("[4] Go back to Main Menu");
         Console.Write("Enter your choice: ");
         int selectedOption = int.Parse(Console.ReadLine());
 
         switch (selectedOption)
         {
             case 1:
-                ModifyExistingIceCream(filePath);
+                ModifyExistingIceCream(filePath, selectedMemberId);
                 break;
 
             case 2:
@@ -617,6 +618,9 @@ void ModifyOrder(string filePath = "orders.csv")
             case 3:
                 DeleteOrder(filePath, selectedMemberId);
                 break;
+
+            case 4:
+                return;
 
             default:
                 Console.WriteLine("Invalid action choice.");
@@ -667,21 +671,13 @@ void DisplayOrdersForCustomer(string filePath, int selectedMemberId)
     }
 }
 
-void ModifyExistingIceCream(string filePath)
+void ModifyExistingIceCream(string filePath, int memberID)
 {
-    // Prompt user to enter MemberId
-    Console.Write("Enter your MemberId: ");
-    int memberID = int.Parse(Console.ReadLine());
-
     // Find all orders associated with the MemberId where "TimeFulfilled" is empty
     List<string[]> memberOrders = FindIncompleteOrdersByMemberId(filePath, memberID);
 
     if (memberOrders.Count > 0)
     {
-        // Display a list of incomplete orders associated with the MemberId
-        Console.WriteLine("List of your incomplete orders:");
-        DisplayOrderList(memberOrders);
-
         // Prompt user to select which order to modify
         Console.Write("Enter the Id of the order to modify: ");
         int orderId = int.Parse(Console.ReadLine());
@@ -691,18 +687,32 @@ void ModifyExistingIceCream(string filePath)
 
         if (selectedOrder != null)
         {
-            // Display the selected order details
-            DisplayOrderDetails(selectedOrder);
+            // Prompt user for modifications
+            Console.WriteLine("Choose what to modify:");
+            Console.WriteLine("[1] Option");
+            Console.WriteLine("[2] Scoops");
+            Console.WriteLine("[3] Toppings");
+            Console.Write("Enter your choice: ");
+            int modificationChoice = int.Parse(Console.ReadLine());
 
-            // Prompt user for new information for modifications
-            Console.Write("Enter new option: ");
-            selectedOrder[4] = Console.ReadLine();
+            switch (modificationChoice)
+            {
+                case 1:
+                    ModifyOption(selectedOrder);
+                    break;
 
-            Console.Write("Enter new number of scoops: ");
-            selectedOrder[5] = int.Parse(Console.ReadLine()).ToString();
+                case 2:
+                    ModifyScoops(selectedOrder);
+                    break;
 
-            Console.Write("Enter new waffle flavour: ");
-            selectedOrder[7] = Console.ReadLine();
+                case 3:
+                    ModifyToppings(selectedOrder);
+                    break;
+
+                default:
+                    Console.WriteLine("Invalid modification choice.");
+                    break;
+            }
 
             // Update the order info accordingly
             UpdateOrder(filePath, memberID, orderId, selectedOrder);
@@ -718,19 +728,91 @@ void ModifyExistingIceCream(string filePath)
     }
 }
 
-// Helper method to display a list of orders
-void DisplayOrderList(List<string[]> orders)
+void ModifyOption(string[] order)
 {
-    foreach (var order in orders)
+    Console.Write("Enter new option (Cone, Cup, or Waffle): ");
+    string newOption = Console.ReadLine();
+
+    // If the previous option was "Cone" and the new option is "Waffle," set "Dipped" to empty
+    if (order[4].Equals("Cone", StringComparison.OrdinalIgnoreCase) && newOption.Equals("Waffle", StringComparison.OrdinalIgnoreCase))
     {
-        Console.WriteLine($"Id: {order[0]}, MemberId: {order[1]}, TimeReceived: {order[2]}, TimeFulfilled: {order[3]}, Option: {order[4]}, Scoops: {order[5]}, Dipped: {order[6]}, WaffleFlavour: {order[7]}, Flavour1: {order[8]}, Flavour2: {order[9]}, Flavour3: {order[10]}, Topping1: {order[11]}, Topping2: {order[12]}, Topping3: {order[13]}, Topping4: {order[14]}");
+        order[6] = ""; // Set "Dipped" to empty
+    }
+    // If the new option is "Cup," set "Dipped" to empty
+    else if (newOption.Equals("Cup", StringComparison.OrdinalIgnoreCase))
+    {
+        order[6] = ""; // Set "Dipped" to empty
+    }
+    else if (newOption.Equals("Cone", StringComparison.OrdinalIgnoreCase))
+    {
+        // Additional prompt for Cone
+        Console.Write("Do you want it dipped? (yes/no): ");
+        order[6] = Console.ReadLine();
+    }
+
+    // Update the "Option" column
+    order[4] = newOption;
+
+    if (newOption.Equals("Waffle", StringComparison.OrdinalIgnoreCase))
+    {
+        // Additional prompt for Waffle
+        Console.Write("Enter Waffle Flavour (Original, Red Velvet, Charcoal, Pandan): ");
+        order[7] = Console.ReadLine();
     }
 }
 
-// Helper method to display the details of a specific order
-void DisplayOrderDetails(string[] order)
+void ModifyScoops(string[] order)
 {
-    Console.WriteLine($"Id: {order[0]}, MemberId: {order[1]}, TimeReceived: {order[2]}, TimeFulfilled: {order[3]}, Option: {order[4]}, Scoops: {order[5]}, Dipped: {order[6]}, WaffleFlavour: {order[7]}, Flavour1: {order[8]}, Flavour2: {order[9]}, Flavour3: {order[10]}, Topping1: {order[11]}, Topping2: {order[12]}, Topping3: {order[13]}, Topping4: {order[14]}");
+    int numberOfScoops;
+
+    // Validate the input for the number of scoops
+    while (true)
+    {
+        // Prompt user for the number of scoops
+        Console.Write("Enter new number of scoops (0-3): ");
+
+        if (int.TryParse(Console.ReadLine(), out numberOfScoops) && numberOfScoops >= 0 && numberOfScoops <= 3)
+        {
+            break; // Valid input, exit the loop
+        }
+        else
+        {
+            Console.WriteLine("Invalid input. Please enter a number between 0 and 3.");
+        }
+    }
+
+    // Update the scoops in the order
+    order[5] = numberOfScoops.ToString();
+
+    // Additional prompt for Flavour based on the number of scoops
+    for (int i = 1; i <= numberOfScoops; i++)
+    {
+        Console.Write($"Enter Flavour for Scoop {i} (Vanilla, Chocolate, Strawberry, Durian, Ube, Sea Salt): ");
+        order[7 + i] = Console.ReadLine();
+    }
+}
+
+void ModifyToppings(string[] order)
+{
+    // Clear existing toppings
+    for (int i = 1; i <= 4; i++)
+    {
+        order[10 + i] = "";
+    }
+
+    // Additional prompt for Toppings
+    for (int i = 1; i <= 4; i++)
+    {
+        Console.Write($"Enter Topping {i} (Sprinkles, Mochi, Sago, Oreo), type 'stop' to finish: ");
+        string topping = Console.ReadLine();
+
+        if (topping.Equals("stop", StringComparison.OrdinalIgnoreCase))
+        {
+            break;
+        }
+
+        order[10 + i] = topping;
+    }
 }
 
 // Helper method to find incomplete orders by MemberId
