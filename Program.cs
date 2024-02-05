@@ -1,10 +1,16 @@
-﻿using T03_Group09_PRG2Assignment;
+﻿//==========================================
+// Student Number : S10262440
+// Student Name   : Dewi Lia Virnanda
+// Part Name      : Lavaniya D/O Rajamoorthi
+//==========================================
+
+using T03_Group09_PRG2Assignment;
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 
-// For orders.csv
+// List to store attributes - orders
 List<int> id = new List<int>();
 List<int> MemberId = new List<int>();
 List<DateTime> TimeReceived = new List<DateTime>();
@@ -20,9 +26,10 @@ List<string> Topping1 = new List<string>();
 List<string> Topping2 = new List<string>();
 List<string> Topping3 = new List<string>();
 List<string> Topping4 = new List<string>();
+// List to store objects - orders
 List<Order> orders = new List<Order>();
 
-// For customers.csv
+// List to store attributes - customers
 List<string> Name = new List<string>();
 List<int> MemberIId = new List<int>();
 List<DateOnly> DOB = new List<DateOnly>();
@@ -30,11 +37,13 @@ List<string> MembershipStatus = new List<string>();
 List<int> MembershipPoints = new List<int>();
 List<int> PunchCard = new List<int>();
 
+// Dict to store queues gold and reg
 Dictionary<int, Queue<Order>> GoldOrderQueues = new Dictionary<int, Queue<Order>>();
 Dictionary<int, Queue<Order>> RegularOrderQueues = new Dictionary<int, Queue<Order>>();
 
 int lastOrderId = 4;
 
+// Read customers.csv
 void ReadCustomersCSV(string filePath)
 {
     try
@@ -69,6 +78,7 @@ void ReadCustomersCSV(string filePath)
         Console.WriteLine($"Error reading customers from file: {ex.Message}");
     }
 }
+// Read orders.csv
 void ReadOrdersCSV(string filePath)
 {
     try
@@ -600,10 +610,9 @@ void ModifyOrder(string filePath = "orders.csv")
     {
         Console.WriteLine($"Order details for {cusName} (MemberId: {selectedMemberId})");
 
-        // Display the orders
         DisplayOrdersForCustomer(filePath, selectedMemberId);
 
-        // Prompt user for the desired action
+        // Menu
         Console.WriteLine("Choose an action:");
         Console.WriteLine("[1] Modify existing ice cream order");
         Console.WriteLine("[2] Add a new ice cream order");
@@ -634,7 +643,6 @@ void ModifyOrder(string filePath = "orders.csv")
                 break;
         }
 
-        // Display the new updated order
         Console.WriteLine("Updated Order:");
         DisplayOrdersForCustomer(filePath, selectedMemberId);
     }
@@ -644,6 +652,7 @@ void ModifyOrder(string filePath = "orders.csv")
     }
 }
 
+// Display specific id order
 void DisplayOrdersForCustomer(string filePath, int selectedMemberId)
 {
     // Header and its spacing
@@ -661,7 +670,6 @@ void DisplayOrdersForCustomer(string filePath, int selectedMemberId)
 
                 if (int.Parse(data[1]) == selectedMemberId && string.IsNullOrEmpty(data[3]))
                 {
-                    // Check for empty string before parsing as Boolean
                     bool isDipped = !string.IsNullOrEmpty(data[6]) && bool.Parse(data[6]);
 
                     Console.WriteLine("{0,-5} {1,-10} {2,-25} {3,-25} {4,-12} {5,-12} {6,-12} {7,-20} {8,-14} {9,-14} {10,-14} {11,-14} {12,-14} {13,-14} {14,-14}",
@@ -678,6 +686,7 @@ void DisplayOrdersForCustomer(string filePath, int selectedMemberId)
     }
 }
 
+// Modify order
 void ModifyExistingIceCream(string filePath, int memberID)
 {
     // Find all orders with the MemberID
@@ -820,7 +829,7 @@ void ModifyToppings(string[] order)
     }
 }
 
-// Helper method to find incomplete orders by MemberId
+// Find incomplete orders by MemberId
 List<string[]> FindIncompleteOrdersByMemberId(string filePath, int memberId)
 {
     List<string[]> incompleteOrders = new List<string[]>();
@@ -940,7 +949,7 @@ void DisplayMonthlyAndTotalCharges(int year)
         return;
     }
 
-    // Initialize monthly totals
+    // int month total
     Dictionary<int, decimal> monthlyTotals = InitializeMonthlyTotals();
 
     // Calculate monthly and total charges
@@ -951,7 +960,7 @@ void DisplayMonthlyAndTotalCharges(int year)
         totalCharges += orderTotal;
 
         // Update monthly total
-        int month = TimeFulfilled[index].Value.Month; // Extract month from the fulfillment date
+        int month = TimeFulfilled[index].Value.Month;
         monthlyTotals[month] += orderTotal;
     }
 
@@ -962,6 +971,7 @@ void DisplayMonthlyAndTotalCharges(int year)
     Console.WriteLine($"Total Charged Amount for {year}: ${totalCharges:F2}");
 }
 
+// Indices of order done in that year
 List<int> GetFilteredOrdersIndicesByYear(int year)
 {
     List<int> filteredOrdersIndices = new List<int>();
@@ -985,6 +995,7 @@ Dictionary<int, decimal> InitializeMonthlyTotals()
     return monthlyTotals;
 }
 
+// Monthly charges
 void DisplayMonthlyBreakdown(int year, Dictionary<int, decimal> monthlyTotals)
 {
     Console.WriteLine($"Monthly Charged Amounts Breakdown for {year}:");
@@ -994,6 +1005,7 @@ void DisplayMonthlyBreakdown(int year, Dictionary<int, decimal> monthlyTotals)
     }
 }
 
+// Calculate total in an order
 decimal CalculateOrderTotal(int index)
 {
     decimal basePrice = GetBasePrice(index);
@@ -1007,6 +1019,7 @@ decimal CalculateOrderTotal(int index)
     return totalOrderPrice;
 }
 
+// Based on Option
 decimal GetBasePrice(int index)
 {
     switch (Option[index].ToLower())
@@ -1022,6 +1035,7 @@ decimal GetBasePrice(int index)
     }
 }
 
+// Based on number of Scoops
 decimal GetCupPrice(int index)
 {
     switch (scoops[index])
@@ -1037,6 +1051,7 @@ decimal GetCupPrice(int index)
     }
 }
 
+// Based on if cone is dipped or not
 decimal GetConePrice(int index)
 {
     decimal basePrice = scoops[index] switch
@@ -1050,6 +1065,7 @@ decimal GetConePrice(int index)
     return basePrice;
 }
 
+// Based on waffle
 decimal GetWafflePrice(int index)
 {
     decimal basePrice = 7.00m;
@@ -1061,6 +1077,7 @@ decimal GetWafflePrice(int index)
     return basePrice + (scoops[index] * waffleFlavourPrice) + premiumFlavourCharge + waffleFlavourCharge;
 }
 
+// If user chose a premium flavour
 decimal GetPremiumFlavourCharge(int index)
 {
     return Flavour1[index].ToLower() switch
@@ -1070,6 +1087,7 @@ decimal GetPremiumFlavourCharge(int index)
     };
 }
 
+// If user chose waffle and has flavour
 decimal GetWaffleFlavourCharge(int index)
 {
     return Flavour2[index].ToLower() switch
